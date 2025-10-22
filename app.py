@@ -113,11 +113,10 @@ def load_lottie_url(url: str):
 
 # URLs de animaciones Lottie
 lottie_animations = {
-    "positive": "https://assets2.lottiefiles.com/packages/lf20_touohxv0.json",
-    "negative": "https://assets9.lottiefiles.com/packages/lf20_tigwf8sl.json",
-    "neutral":  "https://assets2.lottiefiles.com/packages/lf20_u4yrau.json"
+    "positive": "https://assets2.lottiefiles.com/packages/lf20_touohxv0.json",  # Feliz
+    "negative": "https://assets2.lottiefiles.com/packages/lf20_jmgekfqg.json",  # Triste
+    "neutral": "https://assets2.lottiefiles.com/packages/lf20_u4yrau.json"     # Neutral
 }
-
 
 # Función para corrección de texto
 def correct_english_text(text):
@@ -137,7 +136,7 @@ st.markdown('<div class="section-title">Text Analysis</div>', unsafe_allow_html=
 
 text_input = st.text_area(
     "Enter the text you want to analyze:",
-    placeholder="Example: 'I am feeling very happy with the results...' ",
+    placeholder="Example: 'I am feeling very happy with the results...'",
     height=100,
     key="sentiment_input"
 )
@@ -169,14 +168,14 @@ if text_input:
         sentiment_class = "neutral"
         lottie_key = "neutral"
     
-    # Mostrar animación Lottie sin bloquear Streamlit
+    # Mostrar animación Lottie
     lottie_json = load_lottie_url(lottie_animations[lottie_key])
     if lottie_json:
         st_lottie(
             lottie_json,
             height=300,
             width=300,
-            key=f"lottie_{sentiment_class}_{time.time()}"  # Key único para refrescar
+            key=f"lottie_{lottie_key}"
         )
 
 # Mostrar resultados del análisis
@@ -220,6 +219,7 @@ if text_input:
         st.markdown('<div class="correction-title">Corrected text:</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="correction-box">{corrected_text}</div>', unsafe_allow_html=True)
     
+    # Mostrar estado de la corrección
     if text_input.lower() != corrected_text.lower():
         st.success("✅ Errors have been corrected in the text")
     else:
