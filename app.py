@@ -1,6 +1,7 @@
 import streamlit as st
 from textblob import TextBlob
 from googletrans import Translator
+import time
 
 # Configuración de la página
 st.set_page_config(
@@ -9,19 +10,19 @@ st.set_page_config(
     layout="centered"
 )
 
-# Aplicar estilos CSS minimalistas
+# Aplicar estilos CSS mejorados
 st.markdown("""
 <style>
     .main-title {
         font-size: 2.5rem;
-        color: #EC407A;
+        color: #E91E63;
         text-align: center;
         margin-bottom: 2rem;
         font-weight: 700;
     }
     .section-title {
         font-size: 1.5rem;
-        color: #EC407A;
+        color: #E91E63;
         margin: 2rem 0 1rem 0;
         font-weight: 600;
         padding-bottom: 0.5rem;
@@ -32,52 +33,105 @@ st.markdown("""
         padding: 1.5rem;
         border-radius: 10px;
         margin: 1rem 0;
-        border-left: 4px solid #EC407A;
+        border-left: 4px solid #E91E63;
+    }
+    .metric-value {
+        color: #E91E63;
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+    .metric-label {
+        color: #880E4F;
+        font-weight: 500;
     }
     .sentiment-result {
-        padding: 1rem;
+        padding: 1.5rem;
         border-radius: 8px;
         margin: 1rem 0;
         text-align: center;
         font-weight: 600;
+        font-size: 1.1rem;
     }
     .positive {
         background-color: #E8F5E8;
         color: #2E7D32;
-        border: 1px solid #A5D6A7;
+        border: 2px solid #A5D6A7;
     }
     .negative {
         background-color: #FFEBEE;
         color: #C62828;
-        border: 1px solid #EF9A9A;
+        border: 2px solid #EF9A9A;
     }
     .neutral {
         background-color: #FFF8E1;
         color: #F57F17;
-        border: 1px solid #FFE082;
+        border: 2px solid #FFE082;
     }
     .correction-box {
         background-color: #F3E5F5;
-        padding: 1rem;
+        padding: 1.2rem;
         border-radius: 8px;
-        margin: 0.5rem 0;
-        border: 1px solid #E1BEE7;
+        margin: 0.8rem 0;
+        border: 2px solid #E1BEE7;
+        color: #4A148C;
+        font-size: 1rem;
+    }
+    .correction-title {
+        color: #7B1FA2;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
     }
     .stTextArea textarea {
         border-radius: 8px;
-        border: 1px solid #E1BEE7;
+        border: 2px solid #E1BEE7;
+        font-size: 1rem;
     }
     .info-box {
         background-color: #F3E5F5;
-        padding: 1rem;
+        padding: 1.2rem;
         border-radius: 8px;
         margin: 1rem 0;
         font-size: 0.9rem;
+        color: #4A148C;
+        border: 1px solid #E1BEE7;
+    }
+    .divider {
+        margin: 2rem 0;
+        border-top: 2px solid #F8BBD0;
     }
 </style>
 """, unsafe_allow_html=True)
 
 translator = Translator()
+
+def correct_text(text):
+    """Corrige el texto automáticamente en español o inglés"""
+    if not text.strip():
+        return text
+    
+    try:
+        # Detectar idioma
+        detected = translator.detect(text)
+        lang = detected.lang
+        
+        # Si es español, traducir a inglés, corregir y volver a español
+        if lang == 'es':
+            # Traducir a inglés
+            translated = translator.translate(text, src='es', dest='en')
+            # Corregir en inglés
+            blob = TextBlob(translated.text)
+            corrected_en = str(blob.correct())
+            # Volver a español
+            corrected_es = translator.translate(corrected_en, src='en', dest='es')
+            return corrected_es.text
+        else:
+            # Corregir directamente en inglés
+            blob = TextBlob(text)
+            return str(blob.correct())
+    except:
+        # En caso de error, devolver texto original
+        return text
 
 # Título principal
 st.markdown('<h1 class="main-title">💕 Analizador de Sentimientos</h1>', unsafe_allow_html=True)
@@ -88,7 +142,8 @@ st.markdown('<div class="section-title">📝 Análisis de Texto</div>', unsafe_a
 text_input = st.text_area(
     "Escribe el texto que quieres analizar:",
     placeholder="Ej: 'Me siento muy contento con los resultados...'",
-    height=100
+    height=100,
+    key="sentiment_input"
 )
 
 if text_input:
@@ -100,24 +155,24 @@ if text_input:
     polarity = round(blob.sentiment.polarity, 2)
     subjectivity = round(blob.sentiment.subjectivity, 2)
     
-    # Mostrar métricas
+    # Mostrar métricas con mejor contraste
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown(f'''
         <div class="metric-card">
-            <h4>📊 Polaridad</h4>
-            <h3>{polarity}</h3>
-            <small>Sentimiento: -1 (negativo) a 1 (positivo)</small>
+            <div class="metric-label">📊 Polaridad</div>
+            <div class="metric-value">{polarity}</div>
+            <small style="color: #880E4F;">-1 (negativo) a 1 (positivo)</small>
         </div>
         ''', unsafe_allow_html=True)
     
     with col2:
         st.markdown(f'''
         <div class="metric-card">
-            <h4>🎯 Subjetividad</h4>
-            <h3>{subjectivity}</h3>
-            <small>0 (objetivo) a 1 (subjetivo)</small>
+            <div class="metric-label">🎯 Subjetividad</div>
+            <div class="metric-value">{subjectivity}</div>
+            <small style="color: #880E4F;">0 (objetivo) a 1 (subjetivo)</small>
         </div>
         ''', unsafe_allow_html=True)
     
@@ -130,32 +185,49 @@ if text_input:
         st.markdown('<div class="sentiment-result neutral">😐 Sentimiento Neutral</div>', unsafe_allow_html=True)
 
 # Línea divisoria
-st.markdown("---")
+st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
-# Sección de Corrección en Inglés
-st.markdown('<div class="section-title">✏️ Corrección de Inglés</div>', unsafe_allow_html=True)
+# Sección de Corrección Instantánea
+st.markdown('<div class="section-title">✏️ Corrección Instantánea</div>', unsafe_allow_html=True)
 
-english_input = st.text_area(
-    "Escribe texto en inglés para corregir:",
-    placeholder="Ej: 'I am very hapy with the resuls...'",
+st.markdown("Escribe en español o inglés y se corregirá automáticamente:")
+
+# Usar session_state para mantener el texto corregido
+if 'corrected_text' not in st.session_state:
+    st.session_state.corrected_text = ""
+
+correction_input = st.text_area(
+    "Texto a corregir:",
+    placeholder="Ej: 'Hojos' se corregirá a 'Ojos' o 'I am sadaa' a 'I am sad'",
     height=100,
-    key="english_correction"
+    key="correction_input"
 )
 
-if english_input:
-    blob_english = TextBlob(english_input)
-    corrected_text = str(blob_english.correct())
+# Corrección instantánea
+if correction_input:
+    with st.spinner('Corrigiendo...'):
+        # Pequeña pausa para que se vea el spinner
+        time.sleep(0.5)
+        corrected = correct_text(correction_input)
+        st.session_state.corrected_text = corrected
+
+# Mostrar resultado de corrección si existe
+if st.session_state.corrected_text and correction_input:
+    col_orig, col_correct = st.columns(2)
     
-    st.markdown("**Texto original:**")
-    st.markdown(f'<div class="correction-box">{english_input}</div>', unsafe_allow_html=True)
+    with col_orig:
+        st.markdown('<div class="correction-title">Texto original:</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="correction-box">{correction_input}</div>', unsafe_allow_html=True)
     
-    st.markdown("**Texto corregido:**")
-    st.markdown(f'<div class="correction-box">{corrected_text}</div>', unsafe_allow_html=True)
+    with col_correct:
+        st.markdown('<div class="correction-title">Texto corregido:</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="correction-box">{st.session_state.corrected_text}</div>', unsafe_allow_html=True)
     
-    if english_input != corrected_text:
-        st.info("✅ Se han corregido errores en el texto")
+    # Mostrar mensaje de estado
+    if correction_input != st.session_state.corrected_text:
+        st.success("✅ Se han corregido errores en el texto")
     else:
-        st.success("🎉 El texto ya está correcto")
+        st.info("🎉 El texto ya está correcto")
 
 # Información en sidebar
 with st.sidebar:
@@ -166,18 +238,20 @@ with st.sidebar:
     st.markdown("**Subjetividad:** Indica si el texto es objetivo (hechos) o subjetivo (opiniones)")
     st.markdown("</div>", unsafe_allow_html=True)
     
-    st.markdown("### 💡 Consejos")
+    st.markdown("### 💡 Corrección Automática")
     st.markdown('<div class="info-box">', unsafe_allow_html=True)
-    st.markdown("• Escribe textos completos para mejor análisis")
-    st.markdown("• La corrección funciona solo en inglés")
-    st.markdown("• Los textos más largos dan resultados más precisos")
+    st.markdown("• Funciona en español e inglés")
+    st.markdown("• Corrección instantánea")
+    st.markdown("• Detecta automáticamente el idioma")
+    st.markdown("• Ejemplo: 'Hojos' → 'Ojos'")
+    st.markdown("• Ejemplo: 'sadaa' → 'sad'")
     st.markdown("</div>", unsafe_allow_html=True)
 
 # Footer simple
-st.markdown("---")
+st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 st.markdown(
     "<div style='text-align: center; color: #888; font-size: 0.9rem;'>"
-    "Analizador de Sentimientos • Desarrollado con TextBlob y Streamlit"
+    "Analizador de Sentimientos • Corrección automática en español e inglés"
     "</div>",
     unsafe_allow_html=True
 )
