@@ -106,15 +106,18 @@ st.markdown("""
 
 # Función para cargar animaciones Lottie desde URL
 def load_lottie_url(url: str):
-    r = requests.get(url)
-    if r.status_code != 200:
-        return None
-    return r.json()
+    try:
+        r = requests.get(url, timeout=10)
+        if r.status_code == 200:
+            return r.json()
+    except:
+        pass
+    return None
 
-# URLs de animaciones Lottie
+# URLs de animaciones Lottie actualizadas y verificadas
 lottie_animations = {
     "positive": "https://assets2.lottiefiles.com/packages/lf20_touohxv0.json",  # Feliz
-    "negative": "https://lottiefiles.com/free-animation/crying-emoji-2mGWc6v5n5.json",  # Triste
+    "negative": "https://assets1.lottiefiles.com/packages/lf20_1pxqjqps.json",  # Triste - URL corregida
     "neutral": "https://assets2.lottiefiles.com/packages/lf20_u4yrau.json"     # Neutral
 }
 
@@ -155,11 +158,11 @@ if text_input:
     polarity = round(blob.sentiment.polarity, 2)
     subjectivity = round(blob.sentiment.subjectivity, 2)
     
-    if polarity >= 0.5:
+    if polarity >= 0.1:  # Ajustado el umbral para mejor detección
         sentiment_text = "😊 Positive Sentiment"
         sentiment_class = "positive"
         lottie_key = "positive"
-    elif polarity <= -0.5:
+    elif polarity <= -0.1:  # Ajustado el umbral para mejor detección
         sentiment_text = "😔 Negative Sentiment"
         sentiment_class = "negative"
         lottie_key = "negative"
@@ -175,8 +178,10 @@ if text_input:
             lottie_json,
             height=300,
             width=300,
-            key=f"lottie_{lottie_key}"
+            key=f"lottie_{lottie_key}_{time.time()}"  # Key único para forzar actualización
         )
+    else:
+        st.warning(f"⚠️ Could not load animation for {lottie_key} sentiment")
 
 # Mostrar resultados del análisis
 if text_input:
