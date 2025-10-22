@@ -136,7 +136,7 @@ st.markdown('<div class="section-title">Text Analysis</div>', unsafe_allow_html=
 
 text_input = st.text_area(
     "Enter the text you want to analyze:",
-    placeholder="Example: 'I am feeling very happy with the results...'",
+    placeholder="Example: 'I am feeling very happy with the results...' ",
     height=100,
     key="sentiment_input"
 )
@@ -168,16 +168,15 @@ if text_input:
         sentiment_class = "neutral"
         lottie_key = "neutral"
     
-    # Mostrar animación Lottie
+    # Mostrar animación Lottie sin bloquear Streamlit
     lottie_json = load_lottie_url(lottie_animations[lottie_key])
     if lottie_json:
         st_lottie(
             lottie_json,
             height=300,
             width=300,
-            key=f"lottie_{lottie_key}"
+            key=f"lottie_{sentiment_class}_{time.time()}"  # Key único para refrescar
         )
-        time.sleep(3)  # Animación visible 3 segundos
 
 # Mostrar resultados del análisis
 if text_input:
@@ -220,7 +219,6 @@ if text_input:
         st.markdown('<div class="correction-title">Corrected text:</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="correction-box">{corrected_text}</div>', unsafe_allow_html=True)
     
-    # Mostrar estado de la corrección
     if text_input.lower() != corrected_text.lower():
         st.success("✅ Errors have been corrected in the text")
     else:
