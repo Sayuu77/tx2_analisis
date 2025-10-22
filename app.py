@@ -113,10 +113,10 @@ def correct_english_text(text):
         return text
 
 # Título principal
-st.markdown('<h1 class="main-title">💕 English Sentiment Analyzer</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">💕 Mood Analyzer</h1>', unsafe_allow_html=True)
 
 # Sección de Análisis de Sentimientos
-st.markdown('<div class="section-title">📝 Text Analysis</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">Text Analysis</div>', unsafe_allow_html=True)
 
 text_input = st.text_area(
     "Enter the text you want to analyze:",
@@ -158,7 +158,7 @@ if text_input:
     with col1:
         st.markdown(f'''
         <div class="metric-card">
-            <div class="metric-label">📊 Polarity</div>
+            <div class="metric-label">Polarity</div>
             <div class="metric-value">{polarity}</div>
             <small style="color: #880E4F;">-1 (negative) to 1 (positive)</small>
         </div>
@@ -166,7 +166,7 @@ if text_input:
     with col2:
         st.markdown(f'''
         <div class="metric-card">
-            <div class="metric-label">🎯 Subjectivity</div>
+            <div class="metric-label">Subjectivity</div>
             <div class="metric-value">{subjectivity}</div>
             <small style="color: #880E4F;">0 (objective) to 1 (subjective)</small>
         </div>
@@ -178,7 +178,7 @@ if text_input:
 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
 # Sección de Corrección Automática
-st.markdown('<div class="section-title">✏️ Automatic Correction</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">Automatic Correction</div>', unsafe_allow_html=True)
 
 if text_input:
     st.markdown("**Text has been automatically corrected:**")
