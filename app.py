@@ -103,20 +103,54 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-def preprocess_text(text):
-    """Limpia el texto antes de corregirlo"""
-    text = re.sub(r'\s+', ' ', text)
-    text = re.sub(r'[^\w\sáéíóúüñÁÉÍÓÚÜÑ]', '', text)
-    return text.strip()
+def detect_language(text):
+    """Detecta el idioma del texto de forma simple"""
+    # Caracteres comunes en español
+    spanish_chars = set('áéíóúñÁÉÍÓÚÑ')
+    if any(char in text for char in spanish_chars):
+        return 'es'
+    
+    # Palabras comunes en español
+    spanish_words = ['el', 'la', 'los', 'las', 'de', 'que', 'y', 'en', 'un', 'una', 'es', 'son']
+    words = text.lower().split()
+    spanish_count = sum(1 for word in words if word in spanish_words)
+    
+    if spanish_count > len(words) * 0.3:  # Si más del 30% son palabras españolas
+        return 'es'
+    else:
+        return 'en'
 
-def correct_text(text):
-    """Corrige texto automáticamente usando solo TextBlob"""
+def correct_text_automatically(text):
+    """Corrige texto automáticamente para cualquier palabra"""
     if not text.strip():
         return text
+    
     try:
-        blob = TextBlob(preprocess_text(text))
-        return str(blob.correct())
-    except:
+        # Detectar idioma
+        lang = detect_language(text)
+        
+        if lang == 'es':
+            # Para español: usar traducción bidireccional
+            try:
+                # Traducir a inglés
+                translated_en = GoogleTranslator(source='es', target='en').translate(text)
+                # Corregir en inglés (TextBlob funciona mejor en inglés)
+                blob_en = TextBlob(translated_en)
+                corrected_en = str(blob_en.correct())
+                # Traducir de vuelta a español
+                corrected_es = GoogleTranslator(source='en', target='es').translate(corrected_en)
+                return corrected_es
+            except Exception as e:
+                # Fallback: corrección directa
+                blob = TextBlob(text)
+                return str(blob.correct())
+        else:
+            # Para inglés: corrección directa
+            blob = TextBlob(text)
+            return str(blob.correct())
+            
+    except Exception as e:
+        # Si falla todo, devolver texto original
         return text
 
 # Título principal
@@ -127,7 +161,7 @@ st.markdown('<div class="section-title">📝 Análisis de Texto</div>', unsafe_a
 
 text_input = st.text_area(
     "Escribe el texto que quieres analizar:",
-    placeholder="Ej: 'Me siento muy contento con los resultados...'",
+    placeholder="Escribe cualquier texto en español o inglés...",
     height=100,
     key="sentiment_input"
 )
@@ -139,21 +173,21 @@ sentiment_text = ""
 corrected_text = ""
 
 if text_input:
-    # Corregir texto
-    corrected_text = correct_text(text_input)
+    # Corregir texto automáticamente
+    with st.spinner('🔧 Corrigiendo texto...'):
+        corrected_text = correct_text_automatically(text_input)
     
-    # Detectar idioma y traducir a inglés para análisis de sentimiento
+    # Análisis de sentimiento
     try:
-        detected_lang = GoogleTranslator(source='auto', target='en').detect(corrected_text)
+        # Traducir a inglés para análisis (TextBlob funciona mejor en inglés)
+        if detect_language(corrected_text) == 'es':
+            trans_text = GoogleTranslator(source='es', target='en').translate(corrected_text)
+        else:
+            trans_text = corrected_text
     except:
-        detected_lang = 'es'
-    
-    try:
-        trans_text = GoogleTranslator(source='auto', target='en').translate(corrected_text)
-    except:
-        trans_text = corrected_text  # fallback
+        trans_text = corrected_text
 
-    # Análisis de sentimiento en inglés
+    # Análisis de sentimiento
     blob = TextBlob(trans_text)
     polarity = round(blob.sentiment.polarity, 2)
     subjectivity = round(blob.sentiment.subjectivity, 2)
@@ -169,7 +203,7 @@ if text_input:
         sentiment_text = "😐 Sentimiento Neutral"
         sentiment_class = "neutral"
 
-# Mostrar resultados
+# Mostrar resultados del análisis
 if text_input:
     col1, col2 = st.columns(2)
     with col1:
@@ -188,6 +222,7 @@ if text_input:
             <small style="color: #880E4F;">0 (objetivo) a 1 (subjetivo)</small>
         </div>
         ''', unsafe_allow_html=True)
+    
     st.markdown(f'<div class="sentiment-result {sentiment_class}">{sentiment_text}</div>', unsafe_allow_html=True)
 
 # Línea divisoria
@@ -198,23 +233,26 @@ st.markdown('<div class="section-title">✏️ Corrección Automática</div>', u
 
 if text_input:
     st.markdown("**El texto se ha corregido automáticamente:**")
+    
     col_orig, col_correct = st.columns(2)
+    
     with col_orig:
         st.markdown('<div class="correction-title">Texto original:</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="correction-box">{text_input}</div>', unsafe_allow_html=True)
+    
     with col_correct:
         st.markdown('<div class="correction-title">Texto corregido:</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="correction-box">{corrected_text}</div>', unsafe_allow_html=True)
     
+    # Mostrar estado de la corrección
     if text_input.lower() != corrected_text.lower():
         st.success("✅ Se han corregido errores en el texto")
-        st.info("💡 Correcciones aplicadas automáticamente")
     else:
         st.info("🎉 El texto ya está correcto")
 else:
     st.info("✍️ Escribe texto arriba para ver la corrección automática aquí")
 
-# Sidebar
+# Sidebar informativo
 with st.sidebar:
     st.markdown("### ℹ️ Acerca del Análisis")
     st.markdown('<div class="info-box">', unsafe_allow_html=True)
@@ -222,17 +260,21 @@ with st.sidebar:
     st.markdown("**Subjetividad:** Indica si el texto es objetivo (hechos) o subjetivo (opiniones)")
     st.markdown("</div>", unsafe_allow_html=True)
     
-    st.markdown("### 💡 Corrección Automática")
+    st.markdown("### 💡 Cómo Funciona")
     st.markdown('<div class="info-box">', unsafe_allow_html=True)
-    st.markdown("• **Funciona en español e inglés**")
-    st.markdown("• **Corrección instantánea**")
+    st.markdown("""
+    • **Detección automática** de idioma
+    • **Corrección inteligente** para cualquier palabra
+    • **Funciona en español e inglés**
+    • **Procesamiento en tiempo real**
+    """)
     st.markdown("</div>", unsafe_allow_html=True)
 
 # Footer
 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 st.markdown(
     "<div style='text-align: center; color: #888; font-size: 0.9rem;'>"
-    "Analizador de Sentimientos • Corrección automática en español e inglés"
+    "Analizador de Sentimientos • Corrección automática universal"
     "</div>",
     unsafe_allow_html=True
 )
