@@ -114,7 +114,7 @@ def load_lottie_url(url: str):
 # URLs de animaciones Lottie
 lottie_animations = {
     "positive": "https://assets2.lottiefiles.com/packages/lf20_touohxv0.json",  # Feliz
-    "negative": "https://assets2.lottiefiles.com/packages/lf20_jmgekfqg.json",  # Triste
+    "negative": "https://lottiefiles.com/free-animation/crying-emoji-2mGWc6v5n5.json",  # Triste
     "neutral": "https://assets2.lottiefiles.com/packages/lf20_u4yrau.json"     # Neutral
 }
 
