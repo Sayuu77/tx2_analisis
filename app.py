@@ -1,7 +1,5 @@
 import streamlit as st
 from textblob import TextBlob
-import requests
-import json
 
 # Configuración de la página
 st.set_page_config(
@@ -120,47 +118,13 @@ def correct_english_text(text):
     except:
         return text
 
-def display_lottie_animation(sentiment_type):
-    """Muestra animación Lottie según el sentimiento"""
-    lottie_urls = {
-        "positive": "https://assets1.lottiefiles.com/packages/lf20_vybwn7df.json",
-        "negative": "https://assets1.lottiefiles.com/packages/lf20_1pxqjqps.json",
-        "neutral": "https://assets1.lottiefiles.com/packages/lf20_gns3tjng.json"
-    }
-    
-    lottie_html = f"""
-    <div class="lottie-container">
-        <lottie-player 
-            src="{lottie_urls[sentiment_type]}"
-            background="transparent" 
-            speed="1" 
-            style="width: 300px; height: 300px;" 
-            loop 
-            autoplay>
-        </lottie-player>
-    </div>
-    
-    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-    <script>
-        // Animación para hacer crecer y desaparecer
-        setTimeout(() => {{
-            const player = document.querySelector('lottie-player');
-            player.style.transform = 'scale(1.5)';
-            player.style.transition = 'transform 0.5s ease-in-out';
-            
-            setTimeout(() => {{
-                player.style.transform = 'scale(1)';
-            }}, 2000);
-            
-            setTimeout(() => {{
-                player.style.opacity = '0';
-                player.style.transition = 'opacity 1s ease-in-out';
-            }}, 4000);
-        }}, 1000);
-    </script>
-    """
-    
-    st.components.v1.html(lottie_html, height=350)
+# HTML para las animaciones Lottie
+lottie_html = """
+<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+"""
+
+# Inyectar el script de Lottie
+st.components.v1.html(lottie_html, height=0)
 
 # Título principal
 st.markdown('<h1 class="main-title">💕 Mood Analyzer</h1>', unsafe_allow_html=True)
@@ -197,18 +161,64 @@ if text_input:
         sentiment_text = "😊 Positive Sentiment"
         sentiment_class = "positive"
         sentiment_type = "positive"
+        lottie_url = "https://assets1.lottiefiles.com/packages/lf20_vybwn7df.json"
+        animation_name = "Happy Animation"
     elif polarity <= -0.5:
         sentiment_text = "😔 Negative Sentiment"
         sentiment_class = "negative"
         sentiment_type = "negative"
+        lottie_url = "https://assets1.lottiefiles.com/packages/lf20_1pxqjqps.json"
+        animation_name = "Sad Animation"
     else:
         sentiment_text = "😐 Neutral Sentiment"
         sentiment_class = "neutral"
         sentiment_type = "neutral"
+        lottie_url = "https://assets1.lottiefiles.com/packages/lf20_gns3tjng.json"
+        animation_name = "Neutral Animation"
 
 # Mostrar animación Lottie si hay texto analizado
 if text_input and sentiment_type:
-    display_lottie_animation(sentiment_type)
+    st.markdown(f"### 🎭 {animation_name}")
+    
+    # Crear el HTML para la animación Lottie
+    animation_html = f"""
+    <div class="lottie-container">
+        <lottie-player 
+            src="{lottie_url}"
+            background="transparent" 
+            speed="1" 
+            style="width: 300px; height: 300px;" 
+            loop 
+            autoplay>
+        </lottie-player>
+    </div>
+    
+    <script>
+        // Esperar a que se cargue la animación
+        setTimeout(() => {{
+            const player = document.querySelector('lottie-player');
+            if (player) {{
+                // Hacer crecer la animación
+                player.style.transform = 'scale(1.5)';
+                player.style.transition = 'transform 0.5s ease-in-out';
+                
+                // Después de 2 segundos, volver al tamaño normal
+                setTimeout(() => {{
+                    player.style.transform = 'scale(1)';
+                }}, 2000);
+                
+                // Después de 4 segundos, desaparecer
+                setTimeout(() => {{
+                    player.style.opacity = '0';
+                    player.style.transition = 'opacity 1s ease-in-out';
+                }}, 4000);
+            }}
+        }}, 1000);
+    </script>
+    """
+    
+    # Mostrar la animación
+    st.components.v1.html(animation_html, height=350)
 
 # Mostrar resultados del análisis
 if text_input:
@@ -275,6 +285,15 @@ with st.sidebar:
     • **Real-time processing**
     • **Sentiment analysis**
     • **Animated mood reactions**
+    """)
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    st.markdown("### 🎭 Animations")
+    st.markdown('<div class="info-box">', unsafe_allow_html=True)
+    st.markdown("""
+    **Positive:** Happy character animation
+    **Negative:** Sad character with tears  
+    **Neutral:** Thinking character
     """)
     st.markdown("</div>", unsafe_allow_html=True)
 
