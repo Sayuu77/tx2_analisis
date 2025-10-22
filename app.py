@@ -1,14 +1,17 @@
 import streamlit as st
 from textblob import TextBlob
+from streamlit_lottie import st_lottie
+import requests
+import time
 
 # Configuración de la página
 st.set_page_config(
-    page_title="Mood Analyzer",
+    page_title="English Sentiment Analyzer",
     page_icon="💕",
     layout="centered"
 )
 
-# Aplicar estilos CSS mejorados
+# --- CSS ---
 st.markdown("""
 <style>
     .main-title {
@@ -98,38 +101,37 @@ st.markdown("""
         margin: 2rem 0;
         border-top: 2px solid #F8BBD0;
     }
-    .lottie-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 2rem 0;
-    }
 </style>
 """, unsafe_allow_html=True)
 
+# Función para cargar animaciones Lottie desde URL
+def load_lottie_url(url: str):
+    r = requests.get(url)
+    if r.status_code != 200:
+        return None
+    return r.json()
+
+# URLs de animaciones Lottie
+lottie_animations = {
+    "positive": "https://assets2.lottiefiles.com/packages/lf20_touohxv0.json",  # Feliz
+    "negative": "https://assets2.lottiefiles.com/packages/lf20_jmgekfqg.json",  # Triste
+    "neutral": "https://assets2.lottiefiles.com/packages/lf20_u4yrau.json"     # Neutral
+}
+
+# Función para corrección de texto
 def correct_english_text(text):
-    """Corrige texto en inglés usando TextBlob"""
     if not text.strip():
         return text
-    
     try:
         blob = TextBlob(text)
         return str(blob.correct())
     except:
         return text
 
-# HTML para las animaciones Lottie
-lottie_html = """
-<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-"""
-
-# Inyectar el script de Lottie
-st.components.v1.html(lottie_html, height=0)
-
-# Título principal
+# --- Título principal ---
 st.markdown('<h1 class="main-title">💕 Mood Analyzer</h1>', unsafe_allow_html=True)
 
-# Sección de Análisis de Sentimientos
+# Sección de análisis de sentimientos
 st.markdown('<div class="section-title">Text Analysis</div>', unsafe_allow_html=True)
 
 text_input = st.text_area(
@@ -139,86 +141,43 @@ text_input = st.text_area(
     key="sentiment_input"
 )
 
-# Variables para almacenar resultados
 polarity = 0
 subjectivity = 0
 sentiment_text = ""
+sentiment_class = ""
 corrected_text = ""
-sentiment_type = ""
 
 if text_input:
-    # Corregir texto automáticamente
     with st.spinner('🔧 Correcting text...'):
         corrected_text = correct_english_text(text_input)
     
-    # Análisis de sentimiento
     blob = TextBlob(corrected_text)
     polarity = round(blob.sentiment.polarity, 2)
     subjectivity = round(blob.sentiment.subjectivity, 2)
     
-    # Determinar sentimiento
     if polarity >= 0.5:
         sentiment_text = "😊 Positive Sentiment"
         sentiment_class = "positive"
-        sentiment_type = "positive"
-        lottie_url = "https://assets1.lottiefiles.com/packages/lf20_vybwn7df.json"
-        animation_name = "Happy Animation"
+        lottie_key = "positive"
     elif polarity <= -0.5:
         sentiment_text = "😔 Negative Sentiment"
         sentiment_class = "negative"
-        sentiment_type = "negative"
-        lottie_url = "https://assets1.lottiefiles.com/packages/lf20_1pxqjqps.json"
-        animation_name = "Sad Animation"
+        lottie_key = "negative"
     else:
         sentiment_text = "😐 Neutral Sentiment"
         sentiment_class = "neutral"
-        sentiment_type = "neutral"
-        lottie_url = "https://assets1.lottiefiles.com/packages/lf20_gns3tjng.json"
-        animation_name = "Neutral Animation"
-
-# Mostrar animación Lottie si hay texto analizado
-if text_input and sentiment_type:
-    st.markdown(f"### 🎭 {animation_name}")
+        lottie_key = "neutral"
     
-    # Crear el HTML para la animación Lottie
-    animation_html = f"""
-    <div class="lottie-container">
-        <lottie-player 
-            src="{lottie_url}"
-            background="transparent" 
-            speed="1" 
-            style="width: 300px; height: 300px;" 
-            loop 
-            autoplay>
-        </lottie-player>
-    </div>
-    
-    <script>
-        // Esperar a que se cargue la animación
-        setTimeout(() => {{
-            const player = document.querySelector('lottie-player');
-            if (player) {{
-                // Hacer crecer la animación
-                player.style.transform = 'scale(1.5)';
-                player.style.transition = 'transform 0.5s ease-in-out';
-                
-                // Después de 2 segundos, volver al tamaño normal
-                setTimeout(() => {{
-                    player.style.transform = 'scale(1)';
-                }}, 2000);
-                
-                // Después de 4 segundos, desaparecer
-                setTimeout(() => {{
-                    player.style.opacity = '0';
-                    player.style.transition = 'opacity 1s ease-in-out';
-                }}, 4000);
-            }}
-        }}, 1000);
-    </script>
-    """
-    
-    # Mostrar la animación
-    st.components.v1.html(animation_html, height=350)
+    # Mostrar animación Lottie
+    lottie_json = load_lottie_url(lottie_animations[lottie_key])
+    if lottie_json:
+        st_lottie(
+            lottie_json,
+            height=300,
+            width=300,
+            key=f"lottie_{lottie_key}"
+        )
+        time.sleep(3)  # Animación visible 3 segundos
 
 # Mostrar resultados del análisis
 if text_input:
@@ -272,36 +231,22 @@ else:
 # Sidebar informativo
 with st.sidebar:
     st.markdown("### ℹ️ About Analysis")
-    st.markdown('<div class="info-box">', unsafe_allow_html=True)
     st.markdown("**Polarity:** Measures if the text is positive, negative or neutral")
     st.markdown("**Subjectivity:** Indicates if the text is objective (facts) or subjective (opinions)")
-    st.markdown("</div>", unsafe_allow_html=True)
     
     st.markdown("### 💡 How It Works")
-    st.markdown('<div class="info-box">', unsafe_allow_html=True)
     st.markdown("""
-    • **English text only**
-    • **Automatic spelling correction**
-    • **Real-time processing**
-    • **Sentiment analysis**
-    • **Animated mood reactions**
+    • **English text only**  
+    • **Automatic spelling correction**  
+    • **Real-time processing**  
+    • **Sentiment analysis**  
     """)
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    st.markdown("### 🎭 Animations")
-    st.markdown('<div class="info-box">', unsafe_allow_html=True)
-    st.markdown("""
-    **Positive:** Happy character animation
-    **Negative:** Sad character with tears  
-    **Neutral:** Thinking character
-    """)
-    st.markdown("</div>", unsafe_allow_html=True)
 
 # Footer
 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 st.markdown(
     "<div style='text-align: center; color: #888; font-size: 0.9rem;'>"
-    "Mood Analyzer • Automatic text correction • Animated reactions"
+    "English Sentiment Analyzer • Automatic text correction"
     "</div>",
     unsafe_allow_html=True
 )
