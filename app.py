@@ -1,6 +1,5 @@
 import streamlit as st
 from textblob import TextBlob
-from textblob_es import PatternTagger, PatternAnalyzer
 from googletrans import Translator
 import re
 
@@ -113,19 +112,12 @@ def preprocess_text(text):
     return text.strip()
 
 def correct_text(text):
-    """Corrige el texto automáticamente detectando el idioma"""
+    """Corrige el texto automáticamente usando solo TextBlob"""
     if not text.strip():
         return text
     try:
-        detected = translator.detect(text)
-        lang = detected.lang
-        
-        if lang == 'es':
-            blob = TextBlob(preprocess_text(text), pos_tagger=PatternTagger(), analyzer=PatternAnalyzer())
-            return str(blob.correct())
-        else:
-            blob = TextBlob(preprocess_text(text))
-            return str(blob.correct())
+        blob = TextBlob(preprocess_text(text))
+        return str(blob.correct())
     except:
         return text
 
