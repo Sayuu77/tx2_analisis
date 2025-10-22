@@ -1,6 +1,6 @@
 import streamlit as st
 from textblob import TextBlob
-from googletrans import Translator
+from deep_translator import GoogleTranslator
 import re
 
 # Configuración de la página
@@ -103,8 +103,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-translator = Translator()
-
 def preprocess_text(text):
     """Limpia el texto antes de corregirlo"""
     text = re.sub(r'\s+', ' ', text)
@@ -112,7 +110,7 @@ def preprocess_text(text):
     return text.strip()
 
 def correct_text(text):
-    """Corrige el texto automáticamente usando solo TextBlob"""
+    """Corrige texto automáticamente usando solo TextBlob"""
     if not text.strip():
         return text
     try:
@@ -141,14 +139,22 @@ sentiment_text = ""
 corrected_text = ""
 
 if text_input:
-    # Primero corregir el texto
+    # Corregir texto
     corrected_text = correct_text(text_input)
     
-    # Análisis de sentimiento con el texto corregido
-    translation = translator.translate(corrected_text, src="es", dest="en")
-    trans_text = translation.text
-    blob = TextBlob(trans_text)
+    # Detectar idioma y traducir a inglés para análisis de sentimiento
+    try:
+        detected_lang = GoogleTranslator(source='auto', target='en').detect(corrected_text)
+    except:
+        detected_lang = 'es'
     
+    try:
+        trans_text = GoogleTranslator(source='auto', target='en').translate(corrected_text)
+    except:
+        trans_text = corrected_text  # fallback
+
+    # Análisis de sentimiento en inglés
+    blob = TextBlob(trans_text)
     polarity = round(blob.sentiment.polarity, 2)
     subjectivity = round(blob.sentiment.subjectivity, 2)
     
@@ -163,11 +169,9 @@ if text_input:
         sentiment_text = "😐 Sentimiento Neutral"
         sentiment_class = "neutral"
 
-# Mostrar resultados del análisis si hay texto
+# Mostrar resultados
 if text_input:
-    # Mostrar métricas
     col1, col2 = st.columns(2)
-    
     with col1:
         st.markdown(f'''
         <div class="metric-card">
@@ -176,7 +180,6 @@ if text_input:
             <small style="color: #880E4F;">-1 (negativo) a 1 (positivo)</small>
         </div>
         ''', unsafe_allow_html=True)
-    
     with col2:
         st.markdown(f'''
         <div class="metric-card">
@@ -185,8 +188,6 @@ if text_input:
             <small style="color: #880E4F;">0 (objetivo) a 1 (subjetivo)</small>
         </div>
         ''', unsafe_allow_html=True)
-    
-    # Resultado del sentimiento
     st.markdown(f'<div class="sentiment-result {sentiment_class}">{sentiment_text}</div>', unsafe_allow_html=True)
 
 # Línea divisoria
@@ -197,13 +198,10 @@ st.markdown('<div class="section-title">✏️ Corrección Automática</div>', u
 
 if text_input:
     st.markdown("**El texto se ha corregido automáticamente:**")
-    
     col_orig, col_correct = st.columns(2)
-    
     with col_orig:
         st.markdown('<div class="correction-title">Texto original:</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="correction-box">{text_input}</div>', unsafe_allow_html=True)
-    
     with col_correct:
         st.markdown('<div class="correction-title">Texto corregido:</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="correction-box">{corrected_text}</div>', unsafe_allow_html=True)
@@ -216,7 +214,7 @@ if text_input:
 else:
     st.info("✍️ Escribe texto arriba para ver la corrección automática aquí")
 
-# Información en sidebar
+# Sidebar
 with st.sidebar:
     st.markdown("### ℹ️ Acerca del Análisis")
     st.markdown('<div class="info-box">', unsafe_allow_html=True)
@@ -230,7 +228,7 @@ with st.sidebar:
     st.markdown("• **Corrección instantánea**")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Footer simple
+# Footer
 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 st.markdown(
     "<div style='text-align: center; color: #888; font-size: 0.9rem;'>"
