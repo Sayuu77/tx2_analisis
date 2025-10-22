@@ -26,6 +26,13 @@ st.markdown("""
         padding-bottom: 0.5rem;
         border-bottom: 2px solid #F8BBD0;
     }
+    .metric-card {
+        background-color: #FCE4EC;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+        border-left: 4px solid #E91E63;
+    }
     .metric-value {
         color: #E91E63;
         font-size: 1.8rem;
@@ -197,13 +204,11 @@ else:
 # Sidebar informativo
 with st.sidebar:
     st.markdown("### ℹ️ About Analysis")
-    st.markdown('<div class="info-box">', unsafe_allow_html=True)
     st.markdown("**Polarity:** Measures if the text is positive, negative or neutral")
     st.markdown("**Subjectivity:** Indicates if the text is objective (facts) or subjective (opinions)")
     st.markdown("</div>", unsafe_allow_html=True)
     
     st.markdown("### 💡 How It Works")
-    st.markdown('<div class="info-box">', unsafe_allow_html=True)
     st.markdown("""
     • **English text only**
     • **Automatic spelling correction**
