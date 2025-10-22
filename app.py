@@ -113,10 +113,11 @@ def load_lottie_url(url: str):
 
 # URLs de animaciones Lottie
 lottie_animations = {
-    "positive": "https://assets2.lottiefiles.com/packages/lf20_touohxv0.json",  # Feliz
-    "negative": "https://assets2.lottiefiles.com/packages/lf20_jmgekfqg.json",  # Triste
-    "neutral": "https://assets2.lottiefiles.com/packages/lf20_u4yrau.json"     # Neutral
+    "positive": "https://assets2.lottiefiles.com/packages/lf20_touohxv0.json",
+    "negative": "https://assets9.lottiefiles.com/packages/lf20_tigwf8sl.json",
+    "neutral":  "https://assets2.lottiefiles.com/packages/lf20_u4yrau.json"
 }
+
 
 # Función para corrección de texto
 def correct_english_text(text):
