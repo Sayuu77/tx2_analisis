@@ -1,3 +1,5 @@
 streamlit
 textblob
 deep-translator
+requests
+streamlit-lottie
