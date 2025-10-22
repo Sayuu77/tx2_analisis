@@ -114,12 +114,21 @@ def load_lottie_url(url: str):
         pass
     return None
 
-# URLs de animaciones Lottie actualizadas - una realmente triste
+# Diferentes opciones de animaciones tristes - probaremos una por una
 lottie_animations = {
     "positive": "https://assets2.lottiefiles.com/packages/lf20_touohxv0.json",  # Feliz
-    "negative": "https://assets1.lottiefiles.com/packages/lf20_1d2yfchc.json",  # Persona llorando - muy triste
+    "negative": "https://assets9.lottiefiles.com/packages/lf20_6cuyemri.json",  # Persona triste llorando
     "neutral": "https://assets2.lottiefiles.com/packages/lf20_u4yrau.json"     # Neutral
 }
+
+# URLs alternativas para animación triste (por si la primera no funciona)
+sad_animation_options = [
+    "https://assets9.lottiefiles.com/packages/lf20_6cuyemri.json",  # Persona triste llorando
+    "https://assets1.lottiefiles.com/packages/lf20_6cuyemri.json",  # Alternativa
+    "https://assets8.lottiefiles.com/packages/lf20_1sFIKt.json",    # Carita triste
+    "https://assets7.lottiefiles.com/packages/lf20_dsngepnx.json",  # Persona deprimida
+    "https://assets10.lottiefiles.com/packages/lf20_go53c7.json",   # Emoji triste
+]
 
 # Función para corrección de texto
 def correct_english_text(text):
@@ -172,7 +181,18 @@ if text_input:
         lottie_key = "neutral"
     
     # Mostrar animación Lottie
-    lottie_json = load_lottie_url(lottie_animations[lottie_key])
+    lottie_json = None
+    
+    if lottie_key == "negative":
+        # Para animaciones negativas, probar diferentes URLs hasta encontrar una que funcione
+        for sad_url in sad_animation_options:
+            lottie_json = load_lottie_url(sad_url)
+            if lottie_json:
+                lottie_animations["negative"] = sad_url  # Actualizar la URL que funciona
+                break
+    else:
+        lottie_json = load_lottie_url(lottie_animations[lottie_key])
+    
     if lottie_json:
         st_lottie(
             lottie_json,
@@ -181,7 +201,14 @@ if text_input:
             key=f"lottie_{lottie_key}_{time.time()}"
         )
     else:
-        st.warning(f"⚠️ Could not load animation for {lottie_key} sentiment")
+        # Si no carga ninguna animación, mostrar un emoji grande
+        if lottie_key == "positive":
+            st.markdown("<div style='text-align: center; font-size: 150px;'>😊</div>", unsafe_allow_html=True)
+        elif lottie_key == "negative":
+            st.markdown("<div style='text-align: center; font-size: 150px;'>😢</div>", unsafe_allow_html=True)
+        else:
+            st.markdown("<div style='text-align: center; font-size: 150px;'>😐</div>", unsafe_allow_html=True)
+        st.warning("⚠️ Could not load animation, showing emoji instead")
 
 # Mostrar resultados del análisis
 if text_input:
