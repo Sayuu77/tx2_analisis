@@ -1,9 +1,11 @@
 import streamlit as st
 from textblob import TextBlob
+import requests
+import json
 
 # Configuración de la página
 st.set_page_config(
-    page_title="English Sentiment Analyzer",
+    page_title="Mood Analyzer",
     page_icon="💕",
     layout="centered"
 )
@@ -98,6 +100,12 @@ st.markdown("""
         margin: 2rem 0;
         border-top: 2px solid #F8BBD0;
     }
+    .lottie-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 2rem 0;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -111,6 +119,48 @@ def correct_english_text(text):
         return str(blob.correct())
     except:
         return text
+
+def display_lottie_animation(sentiment_type):
+    """Muestra animación Lottie según el sentimiento"""
+    lottie_urls = {
+        "positive": "https://assets1.lottiefiles.com/packages/lf20_vybwn7df.json",
+        "negative": "https://assets1.lottiefiles.com/packages/lf20_1pxqjqps.json",
+        "neutral": "https://assets1.lottiefiles.com/packages/lf20_gns3tjng.json"
+    }
+    
+    lottie_html = f"""
+    <div class="lottie-container">
+        <lottie-player 
+            src="{lottie_urls[sentiment_type]}"
+            background="transparent" 
+            speed="1" 
+            style="width: 300px; height: 300px;" 
+            loop 
+            autoplay>
+        </lottie-player>
+    </div>
+    
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <script>
+        // Animación para hacer crecer y desaparecer
+        setTimeout(() => {{
+            const player = document.querySelector('lottie-player');
+            player.style.transform = 'scale(1.5)';
+            player.style.transition = 'transform 0.5s ease-in-out';
+            
+            setTimeout(() => {{
+                player.style.transform = 'scale(1)';
+            }}, 2000);
+            
+            setTimeout(() => {{
+                player.style.opacity = '0';
+                player.style.transition = 'opacity 1s ease-in-out';
+            }}, 4000);
+        }}, 1000);
+    </script>
+    """
+    
+    st.components.v1.html(lottie_html, height=350)
 
 # Título principal
 st.markdown('<h1 class="main-title">💕 Mood Analyzer</h1>', unsafe_allow_html=True)
@@ -130,6 +180,7 @@ polarity = 0
 subjectivity = 0
 sentiment_text = ""
 corrected_text = ""
+sentiment_type = ""
 
 if text_input:
     # Corregir texto automáticamente
@@ -145,12 +196,19 @@ if text_input:
     if polarity >= 0.5:
         sentiment_text = "😊 Positive Sentiment"
         sentiment_class = "positive"
+        sentiment_type = "positive"
     elif polarity <= -0.5:
         sentiment_text = "😔 Negative Sentiment"
         sentiment_class = "negative"
+        sentiment_type = "negative"
     else:
         sentiment_text = "😐 Neutral Sentiment"
         sentiment_class = "neutral"
+        sentiment_type = "neutral"
+
+# Mostrar animación Lottie si hay texto analizado
+if text_input and sentiment_type:
+    display_lottie_animation(sentiment_type)
 
 # Mostrar resultados del análisis
 if text_input:
@@ -204,16 +262,19 @@ else:
 # Sidebar informativo
 with st.sidebar:
     st.markdown("### ℹ️ About Analysis")
+    st.markdown('<div class="info-box">', unsafe_allow_html=True)
     st.markdown("**Polarity:** Measures if the text is positive, negative or neutral")
     st.markdown("**Subjectivity:** Indicates if the text is objective (facts) or subjective (opinions)")
     st.markdown("</div>", unsafe_allow_html=True)
     
     st.markdown("### 💡 How It Works")
+    st.markdown('<div class="info-box">', unsafe_allow_html=True)
     st.markdown("""
     • **English text only**
     • **Automatic spelling correction**
     • **Real-time processing**
     • **Sentiment analysis**
+    • **Animated mood reactions**
     """)
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -221,7 +282,7 @@ with st.sidebar:
 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 st.markdown(
     "<div style='text-align: center; color: #888; font-size: 0.9rem;'>"
-    "English Sentiment Analyzer • Automatic text correction"
+    "Mood Analyzer • Automatic text correction • Animated reactions"
     "</div>",
     unsafe_allow_html=True
 )
