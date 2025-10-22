@@ -1,5 +1,6 @@
 import streamlit as st
 from textblob import TextBlob
+from textblob_es import PatternTagger, PatternAnalyzer
 from googletrans import Translator
 import re
 
@@ -105,61 +106,25 @@ st.markdown("""
 
 translator = Translator()
 
-def correct_spanish_text(text):
-    """Corrige texto en español usando un enfoque combinado"""
-    if not text.strip():
-        return text
-    
-    # Diccionario de correcciones comunes en español
-    common_corrections = {
-        'hojos': 'ojos', 'muncho': 'mucho', 'haiga': 'haya', 'asercarse': 'acercarse',
-        'cocreta': 'croqueta', 'dotor': 'doctor', 'estubes': 'estuviste', 'haver': 'haber',
-        'hiba': 'iba', 'ansina': 'así', 'entonses': 'entonces', 'dijistes': 'dijiste',
-        'vinistes': 'viniste', 'truje': 'traje', 'naiden': 'nadie', 'mesmo': 'mismo',
-        'vide': 'vi', 'pacencia': 'paciencia', 'cocinar': 'cocinar', 'recebir': 'recibir',
-        'satisfacer': 'satisfacer', 'yeba': 'lleve', 'callo': 'calló', 'valla': 'vaya',
-        'aya': 'haya', 'echo': 'hecho', 'ha': 'ha', 'hechar': 'echar', 'hico': 'hizo',
-        'hubieron': 'hubo', 'inflación': 'inflación', 'jente': 'gente', 'mirar': 'mirar',
-        'pongo': 'pongo', 'practicar': 'practicar', 'preveer': 'prever', 'sabía': 'sabía',
-        'tener': 'tener', 'vien': 'bien', 'vueno': 'bueno', 'zeda': 'ceda'
-    }
-    
-    # Aplicar correcciones palabra por palabra
-    words = text.split()
-    corrected_words = []
-    
-    for word in words:
-        # Limpiar la palabra de signos de puntuación
-        clean_word = re.sub(r'[^\w]', '', word.lower())
-        
-        # Si la palabra está en nuestro diccionario de correcciones, corregirla
-        if clean_word in common_corrections:
-            corrected_word = common_corrections[clean_word]
-            # Mantener la capitalización original si la palabra empezaba con mayúscula
-            if word[0].isupper():
-                corrected_word = corrected_word.capitalize()
-            corrected_words.append(corrected_word)
-        else:
-            corrected_words.append(word)
-    
-    return ' '.join(corrected_words)
+def preprocess_text(text):
+    """Limpia el texto antes de corregirlo"""
+    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r'[^\w\sáéíóúüñÁÉÍÓÚÜÑ]', '', text)
+    return text.strip()
 
 def correct_text(text):
     """Corrige el texto automáticamente detectando el idioma"""
     if not text.strip():
         return text
-    
     try:
-        # Detectar idioma
         detected = translator.detect(text)
         lang = detected.lang
         
         if lang == 'es':
-            # Usar nuestro corrector personalizado para español
-            return correct_spanish_text(text)
+            blob = TextBlob(preprocess_text(text), pos_tagger=PatternTagger(), analyzer=PatternAnalyzer())
+            return str(blob.correct())
         else:
-            # Usar TextBlob para inglés
-            blob = TextBlob(text)
+            blob = TextBlob(preprocess_text(text))
             return str(blob.correct())
     except:
         return text
@@ -230,8 +195,7 @@ if text_input:
         ''', unsafe_allow_html=True)
     
     # Resultado del sentimiento
-    if text_input:
-        st.markdown(f'<div class="sentiment-result {sentiment_class}">{sentiment_text}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="sentiment-result {sentiment_class}">{sentiment_text}</div>', unsafe_allow_html=True)
 
 # Línea divisoria
 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
@@ -239,7 +203,6 @@ st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 # Sección de Corrección Automática
 st.markdown('<div class="section-title">✏️ Corrección Automática</div>', unsafe_allow_html=True)
 
-# Mostrar corrección automática del texto analizado
 if text_input:
     st.markdown("**El texto se ha corregido automáticamente:**")
     
@@ -253,10 +216,9 @@ if text_input:
         st.markdown('<div class="correction-title">Texto corregido:</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="correction-box">{corrected_text}</div>', unsafe_allow_html=True)
     
-    # Mostrar mensaje de estado
     if text_input.lower() != corrected_text.lower():
         st.success("✅ Se han corregido errores en el texto")
-        st.info("💡 **Ejemplos de corrección:** 'Hojos' → 'Ojos', 'sadaa' → 'sad'")
+        st.info("💡 Correcciones aplicadas automáticamente")
     else:
         st.info("🎉 El texto ya está correcto")
 else:
@@ -265,7 +227,6 @@ else:
 # Información en sidebar
 with st.sidebar:
     st.markdown("### ℹ️ Acerca del Análisis")
-    
     st.markdown('<div class="info-box">', unsafe_allow_html=True)
     st.markdown("**Polaridad:** Mide si el texto es positivo, negativo o neutral")
     st.markdown("**Subjetividad:** Indica si el texto es objetivo (hechos) o subjetivo (opiniones)")
@@ -275,13 +236,6 @@ with st.sidebar:
     st.markdown('<div class="info-box">', unsafe_allow_html=True)
     st.markdown("• **Funciona en español e inglés**")
     st.markdown("• **Corrección instantánea**")
-    st.markdown("• **Ejemplos en español:**")
-    st.markdown("  - 'Hojos' → 'Ojos'")
-    st.markdown("  - 'muncho' → 'mucho'")
-    st.markdown("  - 'haiga' → 'haya'")
-    st.markdown("• **Ejemplos en inglés:**")
-    st.markdown("  - 'sadaa' → 'sad'")
-    st.markdown("  - 'hapy' → 'happy'")
     st.markdown("</div>", unsafe_allow_html=True)
 
 # Footer simple
